@@ -10,6 +10,16 @@ A small local web app for downloading public Douyin videos from a copied share l
 
 ## Run
 
+On macOS or Linux, download and start it with one command:
+
+```bash
+git clone https://github.com/HesDevz/douyin-downloader-local.git && cd douyin-downloader-local && python3 -m douyin_downloader.server
+```
+
+If the repository is private, GitHub will ask you to sign in or use a token during `git clone`.
+
+If you already downloaded the folder, run:
+
 ```bash
 python3 -m douyin_downloader.server
 ```
