@@ -391,7 +391,22 @@ def extract_audio(text, save_dir=DEFAULT_SAVE_DIR):
 # ── 提取字幕 ────────────────────────────────────────────────────────────────
 
 def extract_subtitles(text, save_dir=DEFAULT_SAVE_DIR):
-    """提取平台自带字幕（仅 YouTube / B站）。"""
+    """提取平台自带字幕为纯文本（仅 YouTube / B站）。"""
+    result = _extract_subtitles_raw(text, save_dir)
+    # Strip timestamps, keep plain text
+    result["text"] = _srt_to_text(result["content"])
+    return result
+
+
+def extract_srt(text, save_dir=DEFAULT_SAVE_DIR):
+    """提取 SRT 字幕（带时间线，仅 YouTube / B站）。"""
+    result = _extract_subtitles_raw(text, save_dir)
+    result["text"] = result["content"]
+    return result
+
+
+def _extract_subtitles_raw(text, save_dir):
+    """Internal: fetch subtitle file, return raw SRT content."""
     source_url = extract_url(text)
     platform = detect_platform(source_url)
     if not platform:
@@ -448,10 +463,8 @@ def extract_subtitles(text, save_dir=DEFAULT_SAVE_DIR):
             "可能原因：该视频没有自动生成字幕，或字幕语言不匹配。"
         )
 
-    # Read and clean SRT content
+    # Read SRT content
     srt_content = Path(recent_srt).read_text(encoding="utf-8", errors="ignore")
-    # Convert SRT to plain text
-    plain_text = _srt_to_text(srt_content)
 
     PLATFORM_NAMES = {"youtube": "YouTube", "bilibili": "B站"}
 
@@ -460,7 +473,8 @@ def extract_subtitles(text, save_dir=DEFAULT_SAVE_DIR):
         "path": recent_srt,
         "filename": Path(recent_srt).name,
         "bytes": Path(recent_srt).stat().st_size,
-        "text": plain_text,
+        "content": srt_content,
+        "title": Path(recent_srt).stem.rsplit("_", 1)[0],
         "platform": PLATFORM_NAMES.get(platform, platform),
     }
 

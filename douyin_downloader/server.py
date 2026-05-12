@@ -4,7 +4,7 @@ from pathlib import Path
 
 from douyin_downloader.core import (
     DEFAULT_SAVE_DIR, DownloadError,
-    download_video, extract_audio, extract_subtitles, extract_transcript,
+    download_video, extract_audio, extract_subtitles, extract_srt, extract_transcript,
     SUPPORTED_PLATFORMS,
 )
 
@@ -28,6 +28,7 @@ class Handler(BaseHTTPRequestHandler):
             "/api/download": download_video,
             "/api/audio": extract_audio,
             "/api/subtitles": extract_subtitles,
+            "/api/srt": extract_srt,
             "/api/transcript": extract_transcript,
         }
 

@@ -35,11 +35,7 @@
       padding: 28px;
       box-shadow: 0 18px 45px rgba(17, 24, 39, 0.08);
     }
-    h1 {
-      font-size: 24px;
-      margin: 0 0 8px;
-      letter-spacing: 0;
-    }
+    h1 { font-size: 24px; margin: 0 0 8px; }
     .path {
       color: var(--muted);
       margin: 0 0 22px;
@@ -53,7 +49,7 @@
     }
     textarea {
       width: 100%;
-      min-height: 100px;
+      min-height: 80px;
       resize: vertical;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -72,6 +68,57 @@
       margin-top: 14px;
       flex-wrap: wrap;
     }
+
+    /* ── Button group (primary + dropdown trigger) ── */
+    .btn-group {
+      display: inline-flex;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .btn-group button { border-radius: 0; }
+    .btn-group button:first-child { border-radius: 8px 0 0 8px; }
+    .btn-group button:last-child {
+      border-radius: 0 8px 8px 0;
+      border-left: 1px solid rgba(255,255,255,.3);
+      padding: 0 10px;
+      min-width: 36px;
+    }
+    .btn-group.primary button:first-child { border-radius: 8px 0 0 8px; }
+
+    /* ── Dropdown ── */
+    .dropdown { position: relative; display: inline-flex; }
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 160px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      z-index: 100;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-menu button {
+      display: block;
+      width: 100%;
+      border: 0;
+      border-radius: 0;
+      text-align: left;
+      padding: 10px 14px;
+      min-height: auto;
+      background: #fff;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .dropdown-menu button:hover {
+      background: #f0f0f0;
+      color: var(--accent);
+    }
+
     button {
       appearance: none;
       border: 1px solid var(--line);
@@ -84,21 +131,26 @@
       font-weight: 600;
       cursor: pointer;
       transition: all .15s;
+      white-space: nowrap;
     }
     button:hover {
       border-color: var(--accent);
       color: var(--accent);
     }
-    button:disabled {
-      cursor: wait;
-      opacity: .6;
-    }
+    button:disabled { cursor: wait; opacity: .6; }
     button.primary {
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
     }
     button.primary:hover { background: var(--accent-dark); }
+
+    .arrow {
+      display: inline-block;
+      font-size: 10px;
+      margin-left: 2px;
+    }
+
     #status {
       margin-top: 10px;
       min-height: 20px;
@@ -113,10 +165,11 @@
       background: #fafafa;
       display: none;
       word-break: break-all;
-      line-height: 1.55;
+      line-height: 1.6;
       white-space: pre-wrap;
       max-height: 500px;
       overflow-y: auto;
+      font-size: 14px;
     }
     .result.ok {
       display: block;
@@ -132,9 +185,9 @@
     }
     .result.transcript {
       display: block;
-      border-color: var(--line);
+      border-color: #c3dafe;
       color: var(--text);
-      background: #fafafa;
+      background: #f0f4ff;
     }
     .hint {
       margin-top: 14px;
@@ -150,96 +203,151 @@
     <p class="path">支持：抖音 · 小红书 · B站 · YouTube · 快手 &nbsp;|&nbsp; 保存到：~/Desktop/下载</p>
 
     <label for="url">粘贴视频链接或整段分享口令</label>
-    <textarea id="url" placeholder="支持抖音、小红书、B站、YouTube、快手的链接&#10;例如：https://v.douyin.com/xxxx/ 或 https://www.bilibili.com/video/BVxxxx"></textarea>
+    <textarea id="url" placeholder="例如：https://v.douyin.com/xxxx/ 或 https://www.bilibili.com/video/BVxxxx"></textarea>
 
     <div class="actions">
-      <button class="primary" id="btn-download">下载视频</button>
-      <button id="btn-audio">提取音频</button>
-      <button id="btn-subtitle">提取字幕</button>
-      <button id="btn-transcript">提取文案</button>
+      <!-- 下载按钮组 -->
+      <div class="dropdown">
+        <div class="btn-group primary">
+          <button id="btn-download" onclick="doAction('download')">下载视频</button>
+          <button id="btn-download-dd" onclick="toggleMenu('download-menu')"><span class="arrow">▼</span></button>
+        </div>
+        <div class="dropdown-menu" id="download-menu">
+          <button onclick="doAction('download')">下载视频</button>
+          <button onclick="doAction('audio')">下载音频 (mp3)</button>
+          <button onclick="doAction('subtitle')">下载字幕 (纯文本)</button>
+          <button onclick="doAction('srt')">下载 SRT 字幕 (带时间线)</button>
+          <button onclick="doAction('transcript')">下载文案</button>
+        </div>
+      </div>
+
+      <!-- 提取按钮组 -->
+      <div class="dropdown">
+        <div class="btn-group">
+          <button id="btn-extract" onclick="doAction('extract')">提取字幕</button>
+          <button id="btn-extract-dd" onclick="toggleMenu('extract-menu')"><span class="arrow">▼</span></button>
+        </div>
+        <div class="dropdown-menu" id="extract-menu">
+          <button onclick="doAction('extract')">提取字幕 (纯文本)</button>
+          <button onclick="doAction('extract-srt')">提取 SRT 字幕 (带时间线)</button>
+          <button onclick="doAction('extract-transcript')">提取文案</button>
+        </div>
+      </div>
     </div>
+
     <div id="status"></div>
     <div id="result" class="result"></div>
 
     <div class="hint">
-      提取字幕：仅支持 YouTube、B站（平台自动生成字幕）<br>
-      提取文案：YouTube/B站 优先用字幕，其他平台用 MiMo 语音识别
+      字幕 / SRT：仅 YouTube、B站 支持（平台自动生成字幕）<br>
+      文案：YouTube/B站 优先用字幕，其他平台用 MiMo 语音识别
     </div>
   </main>
 
   <script>
     const input = document.getElementById('url');
-    const status = document.getElementById('status');
+    const statusEl = document.getElementById('status');
     const result = document.getElementById('result');
     const apiBase = location.protocol === 'file:' ? 'http://127.0.0.1:8787' : '';
 
     if (location.protocol === 'file:') {
-      show('err', '请用 http://localhost:8787 打开这个工具。直接打开 HTML 文件无法连接下载服务。');
+      show('err', '请用 http://localhost:8787 打开这个工具。');
     }
 
+    /* ── Dropdown toggle ── */
+    function toggleMenu(id) {
+      const menu = document.getElementById(id);
+      const wasOpen = menu.classList.contains('open');
+      closeAllMenus();
+      if (!wasOpen) menu.classList.add('open');
+    }
+    function closeAllMenus() {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
+    }
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown')) closeAllMenus();
+    });
+
+    /* ── Show result ── */
     function show(kind, text) {
       result.className = `result ${kind}`;
       result.textContent = text;
     }
 
-    async function callApi(endpoint, loadingText) {
+    /* ── Action map ── */
+    const ACTIONS = {
+      'download':            { endpoint: '/api/download',    loading: '正在下载视频...',       type: 'file' },
+      'audio':               { endpoint: '/api/audio',       loading: '正在提取音频...',       type: 'file' },
+      'subtitle':            { endpoint: '/api/subtitles',   loading: '正在下载字幕...',       type: 'download-text', ext: '.txt' },
+      'srt':                 { endpoint: '/api/srt',         loading: '正在下载 SRT 字幕...',  type: 'download-text', ext: '.srt' },
+      'transcript':          { endpoint: '/api/transcript',  loading: '正在提取文案...',       type: 'download-text', ext: '.txt' },
+      'extract':             { endpoint: '/api/subtitles',   loading: '正在提取字幕...',       type: 'show' },
+      'extract-srt':         { endpoint: '/api/srt',         loading: '正在提取 SRT 字幕...',  type: 'show' },
+      'extract-transcript':  { endpoint: '/api/transcript',  loading: '正在提取文案...',       type: 'show' },
+    };
+
+    async function doAction(action) {
+      closeAllMenus();
+      const cfg = ACTIONS[action];
+      if (!cfg) return;
+
       const url = input.value.trim();
-      if (!url) {
-        show('err', '先粘贴一个视频链接。');
-        return;
-      }
+      if (!url) { show('err', '先粘贴一个视频链接。'); return; }
 
       const buttons = document.querySelectorAll('button');
       buttons.forEach(b => b.disabled = true);
-      status.textContent = loadingText;
+      statusEl.textContent = cfg.loading;
       result.className = 'result';
       result.textContent = '';
 
       try {
-        const response = await fetch(`${apiBase}${endpoint}`, {
+        const resp = await fetch(`${apiBase}${cfg.endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
+          body: JSON.stringify({ url }),
         });
-        const data = await response.json();
-        if (!response.ok || !data.ok) {
-          throw new Error(data.error || '操作失败');
-        }
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) throw new Error(data.error || '操作失败');
 
-        if (data.text) {
-          // Subtitle or transcript result
-          const method = data.method || '字幕';
-          show('transcript', `【${method}】${data.platform || ''} ${data.title || ''}\n${'─'.repeat(40)}\n\n${data.text}`);
-        } else {
-          // File download result
+        if (cfg.type === 'file') {
+          // File saved to disk
           show('ok', `完成：${data.filename}\n平台：${data.platform}\n大小：${(data.bytes / 1024 / 1024).toFixed(1)} MB\n保存到：${data.path}`);
+        } else if (cfg.type === 'download-text') {
+          // Text content → download as file
+          const text = data.text || data.content || '';
+          const fname = (data.title || 'subtitle') + cfg.ext;
+          downloadTextFile(fname, text);
+          show('ok', `已下载：${fname}\n平台：${data.platform || ''}\n字符数：${text.length}`);
+        } else {
+          // Show in page
+          const text = data.text || data.content || '(空)';
+          const method = data.method || '';
+          const title = data.title ? ` 【${data.title}】` : '';
+          const plat = data.platform ? ` ${data.platform}` : '';
+          show('transcript', `${method}${plat}${title}\n${'─'.repeat(40)}\n\n${text}`);
         }
       } catch (error) {
         show('err', error.message);
       } finally {
         buttons.forEach(b => b.disabled = false);
-        status.textContent = '';
+        statusEl.textContent = '';
       }
     }
 
-    document.getElementById('btn-download').addEventListener('click', () => {
-      callApi('/api/download', '正在下载视频...');
-    });
-    document.getElementById('btn-audio').addEventListener('click', () => {
-      callApi('/api/audio', '正在提取音频...');
-    });
-    document.getElementById('btn-subtitle').addEventListener('click', () => {
-      callApi('/api/subtitles', '正在提取字幕...');
-    });
-    document.getElementById('btn-transcript').addEventListener('click', () => {
-      callApi('/api/transcript', '正在提取文案...');
-    });
+    function downloadTextFile(filename, text) {
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
 
-    // Enter key triggers download
+    // Enter key → download video
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        callApi('/api/download', '正在下载视频...');
+        doAction('download');
       }
     });
   </script>
