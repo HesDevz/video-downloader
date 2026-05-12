@@ -53,7 +53,7 @@
     }
     textarea {
       width: 100%;
-      min-height: 150px;
+      min-height: 100px;
       resize: vertical;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -66,32 +66,42 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
     }
-    .row {
+    .actions {
       display: flex;
-      align-items: center;
-      gap: 12px;
+      gap: 10px;
       margin-top: 14px;
       flex-wrap: wrap;
     }
     button {
       appearance: none;
-      border: 0;
+      border: 1px solid var(--line);
       border-radius: 8px;
-      background: var(--accent);
-      color: #fff;
+      background: #fff;
+      color: var(--text);
       min-height: 44px;
-      padding: 0 18px;
+      padding: 0 16px;
       font: inherit;
-      font-weight: 700;
+      font-weight: 600;
       cursor: pointer;
+      transition: all .15s;
     }
-    button:hover { background: var(--accent-dark); }
+    button:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
     button:disabled {
       cursor: wait;
-      opacity: .72;
+      opacity: .6;
     }
+    button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    button.primary:hover { background: var(--accent-dark); }
     #status {
-      min-height: 24px;
+      margin-top: 10px;
+      min-height: 20px;
       font-size: 14px;
       color: var(--muted);
     }
@@ -104,6 +114,9 @@
       display: none;
       word-break: break-all;
       line-height: 1.55;
+      white-space: pre-wrap;
+      max-height: 500px;
+      overflow-y: auto;
     }
     .result.ok {
       display: block;
@@ -117,6 +130,18 @@
       color: var(--danger);
       background: #fffbfa;
     }
+    .result.transcript {
+      display: block;
+      border-color: var(--line);
+      color: var(--text);
+      background: #fafafa;
+    }
+    .hint {
+      margin-top: 14px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
   </style>
 </head>
 <body>
@@ -127,17 +152,23 @@
     <label for="url">粘贴视频链接或整段分享口令</label>
     <textarea id="url" placeholder="支持抖音、小红书、B站、YouTube、快手的链接&#10;例如：https://v.douyin.com/xxxx/ 或 https://www.bilibili.com/video/BVxxxx"></textarea>
 
-    <div class="row">
-      <button id="download">下载</button>
-      <span id="status"></span>
+    <div class="actions">
+      <button class="primary" id="btn-download">下载视频</button>
+      <button id="btn-audio">提取音频</button>
+      <button id="btn-subtitle">提取字幕</button>
+      <button id="btn-transcript">提取文案</button>
     </div>
-
+    <div id="status"></div>
     <div id="result" class="result"></div>
+
+    <div class="hint">
+      提取字幕：仅支持 YouTube、B站（平台自动生成字幕）<br>
+      提取文案：YouTube/B站 优先用字幕，其他平台用 MiMo 语音识别
+    </div>
   </main>
 
   <script>
     const input = document.getElementById('url');
-    const button = document.getElementById('download');
     const status = document.getElementById('status');
     const result = document.getElementById('result');
     const apiBase = location.protocol === 'file:' ? 'http://127.0.0.1:8787' : '';
@@ -151,35 +182,64 @@
       result.textContent = text;
     }
 
-    button.addEventListener('click', async () => {
+    async function callApi(endpoint, loadingText) {
       const url = input.value.trim();
       if (!url) {
         show('err', '先粘贴一个视频链接。');
         return;
       }
 
-      button.disabled = true;
-      status.textContent = '正在解析并下载...';
+      const buttons = document.querySelectorAll('button');
+      buttons.forEach(b => b.disabled = true);
+      status.textContent = loadingText;
       result.className = 'result';
       result.textContent = '';
 
       try {
-        const response = await fetch(`${apiBase}/api/download`, {
+        const response = await fetch(`${apiBase}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url })
         });
         const data = await response.json();
         if (!response.ok || !data.ok) {
-          throw new Error(data.error || '下载失败');
+          throw new Error(data.error || '操作失败');
         }
-        show('ok', `下载完成：${data.filename}\n平台：${data.platform}\n大小：${(data.bytes / 1024 / 1024).toFixed(1)} MB\n保存到：${data.path}`);
-        input.value = '';
+
+        if (data.text) {
+          // Subtitle or transcript result
+          const method = data.method || '字幕';
+          show('transcript', `【${method}】${data.platform || ''} ${data.title || ''}\n${'─'.repeat(40)}\n\n${data.text}`);
+        } else {
+          // File download result
+          show('ok', `完成：${data.filename}\n平台：${data.platform}\n大小：${(data.bytes / 1024 / 1024).toFixed(1)} MB\n保存到：${data.path}`);
+        }
       } catch (error) {
         show('err', error.message);
       } finally {
-        button.disabled = false;
+        buttons.forEach(b => b.disabled = false);
         status.textContent = '';
+      }
+    }
+
+    document.getElementById('btn-download').addEventListener('click', () => {
+      callApi('/api/download', '正在下载视频...');
+    });
+    document.getElementById('btn-audio').addEventListener('click', () => {
+      callApi('/api/audio', '正在提取音频...');
+    });
+    document.getElementById('btn-subtitle').addEventListener('click', () => {
+      callApi('/api/subtitles', '正在提取字幕...');
+    });
+    document.getElementById('btn-transcript').addEventListener('click', () => {
+      callApi('/api/transcript', '正在提取文案...');
+    });
+
+    // Enter key triggers download
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        callApi('/api/download', '正在下载视频...');
       }
     });
   </script>

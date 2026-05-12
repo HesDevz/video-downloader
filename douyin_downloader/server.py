@@ -2,7 +2,11 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from douyin_downloader.core import DEFAULT_SAVE_DIR, DownloadError, download_video, SUPPORTED_PLATFORMS
+from douyin_downloader.core import (
+    DEFAULT_SAVE_DIR, DownloadError,
+    download_video, extract_audio, extract_subtitles, extract_transcript,
+    SUPPORTED_PLATFORMS,
+)
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -20,7 +24,15 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
 
     def do_POST(self):
-        if self.path != "/api/download":
+        routes = {
+            "/api/download": download_video,
+            "/api/audio": extract_audio,
+            "/api/subtitles": extract_subtitles,
+            "/api/transcript": extract_transcript,
+        }
+
+        func = routes.get(self.path)
+        if not func:
             self.send_error(404)
             return
 
@@ -28,7 +40,7 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
             body = self.rfile.read(length).decode("utf-8")
             payload = json.loads(body)
-            result = download_video(payload.get("url", ""), DEFAULT_SAVE_DIR)
+            result = func(payload.get("url", ""), DEFAULT_SAVE_DIR)
             self._send_json(200, result)
         except DownloadError as exc:
             self._send_json(400, {"ok": False, "error": str(exc)})
