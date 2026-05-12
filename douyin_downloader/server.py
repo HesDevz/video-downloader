@@ -53,7 +53,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    server = ThreadingHTTPServer(("127.0.0.1", 8787), Handler)
+    server = ThreadingHTTPServer(("0.0.0.0", 8787), Handler)
     print("视频下载器 running at http://localhost:8787")
     print(f"支持平台：{SUPPORTED_PLATFORMS}")
     print(f"保存到：{DEFAULT_SAVE_DIR}")
