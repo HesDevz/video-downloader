@@ -7,103 +7,206 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f7f9; --text: #17181c; --muted: #667085;
-      --line: #d8dde7; --accent: #0f766e; --accent-dark: #0b5f59;
-      --danger: #b42318; --ok: #067647;
+      --bg: #faf8f5;
+      --card: #fffefb;
+      --text: #2c2c2c;
+      --muted: #8a8680;
+      --line: #e8e4de;
+      --accent: #d4a574;
+      --accent-dark: #c49464;
+      --accent-hover: #e8c4a0;
+      --danger: #c0392b;
+      --ok: #27ae60;
+      --radius: 16px;
+      --radius-sm: 10px;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: grid; place-items: center; padding: 28px;
+      margin: 0; min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      display: grid; place-items: center;
+      padding: 24px;
     }
     main {
-      width: min(760px, 100%); background: #fff;
-      border: 1px solid var(--line); border-radius: 8px;
-      padding: 28px; box-shadow: 0 18px 45px rgba(17,24,39,.08);
+      width: min(680px, 100%);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 32px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.04);
     }
-    h1 { font-size: 24px; margin: 0 0 8px; }
+    h1 {
+      font-size: 22px; margin: 0 0 6px;
+      font-weight: 700; color: var(--text);
+    }
+    .subtitle {
+      color: var(--muted); font-size: 13px;
+      margin: 0 0 24px; line-height: 1.5;
+    }
+
+    /* ── Path row ── */
     .path-row {
       display: flex; align-items: center; gap: 8px;
-      margin: 0 0 22px; font-size: 14px; flex-wrap: wrap;
+      margin-bottom: 20px; font-size: 13px;
     }
     .path-label { color: var(--muted); white-space: nowrap; }
     .path-input {
-      flex: 1; min-width: 200px; border: 1px solid var(--line);
-      border-radius: 6px; padding: 4px 8px; font: inherit; font-size: 13px;
-      color: var(--text); outline: none; background: #fafafa;
+      flex: 1; min-width: 160px;
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      padding: 6px 12px; font: inherit; font-size: 13px;
+      color: var(--text); background: var(--bg); outline: none;
+      transition: border-color .2s;
     }
-    .path-input:focus { border-color: var(--accent); background: #fff; }
-    label { display: block; font-weight: 650; margin-bottom: 8px; }
+    .path-input:focus { border-color: var(--accent); }
+
+    /* ── Input area ── */
+    .input-group {
+      display: flex; gap: 10px; margin-bottom: 16px;
+    }
     textarea {
-      width: 100%; min-height: 80px; resize: vertical;
-      border: 1px solid var(--line); border-radius: 8px;
-      padding: 14px; font: inherit; line-height: 1.45; outline: none;
+      flex: 1; min-height: 56px; max-height: 120px; resize: vertical;
+      border: 1px solid var(--line); border-radius: var(--radius-sm);
+      padding: 12px 14px; font: inherit; font-size: 14px;
+      line-height: 1.5; outline: none; background: var(--bg);
+      transition: border-color .2s;
     }
-    textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,118,110,.14); }
-    .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    textarea:focus { border-color: var(--accent); }
+    .btn-parse {
+      min-width: 72px;
+      background: var(--accent); color: #fff; border: none;
+      border-radius: var(--radius-sm); font-weight: 600;
+      font-size: 14px; cursor: pointer; transition: background .2s;
+    }
+    .btn-parse:hover { background: var(--accent-dark); }
+    .btn-parse:disabled { opacity: .5; cursor: wait; }
+
+    /* ── Video preview ── */
+    .preview {
+      display: none; margin-bottom: 20px;
+      border-radius: var(--radius-sm); overflow: hidden;
+      border: 1px solid var(--line); background: #000;
+    }
+    .preview.show { display: block; }
+    .preview video {
+      width: 100%; max-height: 360px; display: block;
+      border-radius: var(--radius-sm);
+    }
+    .preview-info {
+      padding: 10px 14px; background: var(--bg);
+      font-size: 13px; color: var(--muted);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .preview-title {
+      font-weight: 600; color: var(--text);
+      font-size: 14px; margin-bottom: 4px;
+    }
+
+    /* ── Actions ── */
+    .actions {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
 
     /* ── Button group ── */
-    .btn-group { display: inline-flex; border-radius: 8px; overflow: hidden; }
-    .btn-group button { border-radius: 0; }
-    .btn-group button:first-child { border-radius: 8px 0 0 8px; }
-    .btn-group button:last-child {
-      border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255,255,255,.3);
-      padding: 0 10px; min-width: 36px;
-    }
     .dropdown { position: relative; display: inline-flex; }
+    .btn-group {
+      display: inline-flex; border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .btn-group button { border-radius: 0; border-right: none; }
+    .btn-group button:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+    .btn-group button:last-child {
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      border-left: 1px solid rgba(255,255,255,.2);
+      padding: 0 10px; min-width: 34px;
+    }
     .dropdown-menu {
-      display: none; position: absolute; top: 100%; left: 0;
-      min-width: 180px; background: #fff; border: 1px solid var(--line);
-      border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
-      z-index: 100; overflow: hidden; margin-top: 4px;
+      display: none; position: absolute; top: calc(100% + 6px); left: 0;
+      min-width: 180px; background: var(--card); border: 1px solid var(--line);
+      border-radius: var(--radius-sm); box-shadow: 0 8px 32px rgba(0,0,0,.1);
+      z-index: 100; overflow: hidden;
     }
     .dropdown-menu.open { display: block; }
     .dropdown-menu button {
-      display: block; width: 100%; border: 0; border-radius: 0;
+      display: block; width: 100%; border: none; border-radius: 0;
       text-align: left; padding: 10px 14px; min-height: auto;
-      background: #fff; color: var(--text); font-size: 14px; font-weight: 500;
+      background: transparent; font-size: 13px; font-weight: 500;
     }
-    .dropdown-menu button:hover { background: #f0f0f0; color: var(--accent); }
+    .dropdown-menu button:hover { background: var(--bg); color: var(--accent-dark); }
 
     button {
-      appearance: none; border: 1px solid var(--line); border-radius: 8px;
-      background: #fff; color: var(--text); min-height: 44px; padding: 0 16px;
-      font: inherit; font-weight: 600; cursor: pointer; transition: all .15s;
-      white-space: nowrap;
+      appearance: none; border: 1px solid var(--line); border-radius: var(--radius-sm);
+      background: var(--card); color: var(--text); min-height: 42px; padding: 0 16px;
+      font: inherit; font-weight: 600; font-size: 13px;
+      cursor: pointer; transition: all .2s; white-space: nowrap;
     }
-    button:hover { border-color: var(--accent); color: var(--accent); }
-    button:disabled { cursor: wait; opacity: .6; }
-    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    button:hover { border-color: var(--accent); color: var(--accent-dark); }
+    button:disabled { cursor: wait; opacity: .5; }
+    button.primary {
+      background: var(--accent); color: #fff; border-color: var(--accent);
+    }
     button.primary:hover { background: var(--accent-dark); }
-    .arrow { display: inline-block; font-size: 10px; margin-left: 2px; }
+    .arrow { font-size: 10px; margin-left: 2px; opacity: .7; }
 
-    #status { margin-top: 10px; min-height: 20px; font-size: 14px; color: var(--muted); }
-    .result {
-      margin-top: 18px; padding: 14px; border-radius: 8px;
-      border: 1px solid var(--line); background: #fafafa;
-      display: none; word-break: break-all; line-height: 1.6;
-      white-space: pre-wrap; max-height: 500px; overflow-y: auto; font-size: 14px;
+    /* ── Status & Result ── */
+    #status {
+      margin-top: 12px; min-height: 18px;
+      font-size: 13px; color: var(--muted);
     }
-    .result.ok { display: block; border-color: #abefc6; color: var(--ok); background: #f6fef9; }
-    .result.err { display: block; border-color: #fecdca; color: var(--danger); background: #fffbfa; }
-    .result.transcript { display: block; border-color: #c3dafe; color: var(--text); background: #f0f4ff; }
-    .hint { margin-top: 14px; font-size: 13px; color: var(--muted); line-height: 1.6; }
+    .result {
+      margin-top: 16px; padding: 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--line); background: var(--bg);
+      display: none; word-break: break-all; line-height: 1.7;
+      white-space: pre-wrap; max-height: 400px; overflow-y: auto;
+      font-size: 13px;
+    }
+    .result.ok {
+      display: block; border-color: #b8e6c8;
+      color: var(--ok); background: #f0faf4;
+    }
+    .result.err {
+      display: block; border-color: #f5c6c6;
+      color: var(--danger); background: #fdf2f2;
+    }
+    .result.transcript {
+      display: block; border-color: var(--accent-hover);
+      color: var(--text); background: #fdf8f3;
+    }
+
+    .hint {
+      margin-top: 16px; font-size: 12px; color: var(--muted);
+      line-height: 1.6; padding-top: 12px; border-top: 1px solid var(--line);
+    }
   </style>
 </head>
 <body>
   <main>
     <h1>视频下载</h1>
+    <p class="subtitle">支持：抖音 · 小红书 · B站 · YouTube · 快手</p>
+
     <div class="path-row">
-      <span class="path-label">保存到：</span>
+      <span class="path-label">保存到</span>
       <input class="path-input" id="save-dir" value="~/Desktop/下载" placeholder="保存路径">
     </div>
 
-    <label for="url">粘贴视频链接或整段分享口令</label>
-    <textarea id="url" placeholder="例如：https://v.douyin.com/xxxx/ 或 https://www.bilibili.com/video/BVxxxx"></textarea>
+    <div class="input-group">
+      <textarea id="url" placeholder="粘贴视频链接或分享口令" rows="2"></textarea>
+      <button class="btn-parse" id="btn-parse">解析</button>
+    </div>
+
+    <div class="preview" id="preview">
+      <video id="video-player" controls preload="metadata"></video>
+      <div class="preview-info">
+        <div>
+          <div class="preview-title" id="preview-title"></div>
+          <div id="preview-meta"></div>
+        </div>
+      </div>
+    </div>
 
     <div class="actions">
-      <!-- 下载按钮组 -->
       <div class="dropdown">
         <div class="btn-group primary">
           <button id="btn-download" onclick="doAction('download')">下载视频</button>
@@ -118,7 +221,6 @@
         </div>
       </div>
 
-      <!-- 提取按钮组 -->
       <div class="dropdown">
         <div class="btn-group">
           <button id="btn-extract" onclick="doAction('extract')">提取字幕</button>
@@ -146,16 +248,20 @@
     const saveDirInput = document.getElementById('save-dir');
     const statusEl = document.getElementById('status');
     const result = document.getElementById('result');
+    const preview = document.getElementById('preview');
+    const videoPlayer = document.getElementById('video-player');
+    const previewTitle = document.getElementById('preview-title');
+    const previewMeta = document.getElementById('preview-meta');
     const apiBase = location.protocol === 'file:' ? 'http://127.0.0.1:8787' : '';
 
     if (location.protocol === 'file:') {
       show('err', '请用 http://localhost:8787 打开这个工具。');
     }
 
-    // Restore save dir from localStorage
     const savedDir = localStorage.getItem('save-dir');
     if (savedDir) saveDirInput.value = savedDir;
 
+    /* ── Dropdown ── */
     function toggleMenu(id) {
       const menu = document.getElementById(id);
       const wasOpen = menu.classList.contains('open');
@@ -165,21 +271,17 @@
     function closeAllMenus() {
       document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('open'));
     }
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', e => {
       if (!e.target.closest('.dropdown')) closeAllMenus();
     });
 
-    // Dropdown item click → update button text + trigger action
     document.querySelectorAll('.dropdown-menu button[data-action]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const action = btn.dataset.action;
-        const label = btn.dataset.label;
-        // Update the parent button text
         const group = btn.closest('.dropdown');
         const mainBtn = group.querySelector('.btn-group button:first-child');
-        if (mainBtn) mainBtn.textContent = label;
+        if (mainBtn) mainBtn.textContent = btn.dataset.label;
         closeAllMenus();
-        doAction(action);
+        doAction(btn.dataset.action);
       });
     });
 
@@ -188,15 +290,58 @@
       result.textContent = text;
     }
 
+    /* ── 解析按钮 ── */
+    document.getElementById('btn-parse').addEventListener('click', async () => {
+      const url = input.value.trim();
+      if (!url) { show('err', '先粘贴一个视频链接。'); return; }
+
+      const btn = document.getElementById('btn-parse');
+      btn.disabled = true;
+      btn.textContent = '解析中…';
+      preview.classList.remove('show');
+
+      try {
+        // 用 download API 获取视频信息（不实际下载大文件）
+        // 先尝试获取字幕/文案来验证链接有效
+        const resp = await fetch(`${apiBase}/api/transcript`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, save_dir: saveDirInput.value.trim() }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) throw new Error(data.error || '解析失败');
+
+        // 显示解析结果
+        const method = data.method || '字幕';
+        const title = data.title || '未知标题';
+        const platform = data.platform || '';
+        previewTitle.textContent = title;
+        previewMeta.textContent = `${platform} · ${method} · ${data.text?.length || 0} 字`;
+        preview.classList.add('show');
+
+        // 隐藏视频播放器（因为 transcript API 不返回视频URL）
+        videoPlayer.style.display = 'none';
+
+        show('transcript', `${method} · ${platform}\n${'─'.repeat(40)}\n\n${data.text}`);
+      } catch (error) {
+        show('err', error.message);
+        preview.classList.remove('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '解析';
+      }
+    });
+
+    /* ── Action map ── */
     const ACTIONS = {
-      'download':            { endpoint: '/api/download',    loading: '正在下载视频...',       type: 'file' },
-      'audio':               { endpoint: '/api/audio',       loading: '正在提取音频...',       type: 'file' },
-      'subtitle':            { endpoint: '/api/subtitles',   loading: '正在下载字幕...',       type: 'download-text', ext: '.txt' },
-      'srt':                 { endpoint: '/api/srt',         loading: '正在下载 SRT 字幕...',  type: 'download-text', ext: '.srt' },
-      'transcript':          { endpoint: '/api/transcript',  loading: '正在提取文案...',       type: 'download-text', ext: '.txt' },
-      'extract':             { endpoint: '/api/subtitles',   loading: '正在提取字幕...',       type: 'show' },
-      'extract-srt':         { endpoint: '/api/srt',         loading: '正在提取 SRT 字幕...',  type: 'show' },
-      'extract-transcript':  { endpoint: '/api/transcript',  loading: '正在提取文案...',       type: 'show' },
+      'download':            { endpoint: '/api/download',    loading: '正在下载视频…',       type: 'file' },
+      'audio':               { endpoint: '/api/audio',       loading: '正在提取音频…',       type: 'file' },
+      'subtitle':            { endpoint: '/api/subtitles',   loading: '正在下载字幕…',       type: 'download-text', ext: '.txt' },
+      'srt':                 { endpoint: '/api/srt',         loading: '正在下载 SRT 字幕…',  type: 'download-text', ext: '.srt' },
+      'transcript':          { endpoint: '/api/transcript',  loading: '正在提取文案…',       type: 'download-text', ext: '.txt' },
+      'extract':             { endpoint: '/api/subtitles',   loading: '正在提取字幕…',       type: 'show' },
+      'extract-srt':         { endpoint: '/api/srt',         loading: '正在提取 SRT 字幕…',  type: 'show' },
+      'extract-transcript':  { endpoint: '/api/transcript',  loading: '正在提取文案…',       type: 'show' },
     };
 
     async function doAction(action) {
@@ -207,7 +352,6 @@
       const url = input.value.trim();
       if (!url) { show('err', '先粘贴一个视频链接。'); return; }
 
-      // Save path to localStorage
       localStorage.setItem('save-dir', saveDirInput.value.trim());
 
       const buttons = document.querySelectorAll('button');
@@ -228,12 +372,12 @@
         if (cfg.type === 'file') {
           show('ok', `完成：${data.filename}\n平台：${data.platform}\n大小：${(data.bytes / 1024 / 1024).toFixed(1)} MB\n保存到：${data.path}`);
         } else if (cfg.type === 'download-text') {
-          const text = data.text || data.content || '';
+          const text = data.text || '';
           const fname = (data.title || 'subtitle') + cfg.ext;
           downloadTextFile(fname, text);
           show('ok', `已下载：${fname}\n平台：${data.platform || ''}\n字符数：${text.length}`);
         } else {
-          const text = data.text || data.content || '(空)';
+          const text = data.text || '(空)';
           const method = data.method ? `【${data.method}】` : '';
           const title = data.title ? ` ${data.title}` : '';
           const plat = data.platform ? ` ${data.platform}` : '';
@@ -256,10 +400,12 @@
       URL.revokeObjectURL(a.href);
     }
 
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !eShiftKey(e)) { e.preventDefault(); doAction('download'); }
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        document.getElementById('btn-parse').click();
+      }
     });
-    function eShiftKey(e) { return e.shiftKey; }
   </script>
 </body>
 </html>
