@@ -7,200 +7,97 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f6f7f9;
-      --text: #17181c;
-      --muted: #667085;
-      --line: #d8dde7;
-      --accent: #0f766e;
-      --accent-dark: #0b5f59;
-      --danger: #b42318;
-      --ok: #067647;
+      --bg: #f6f7f9; --text: #17181c; --muted: #667085;
+      --line: #d8dde7; --accent: #0f766e; --accent-dark: #0b5f59;
+      --danger: #b42318; --ok: #067647;
     }
     * { box-sizing: border-box; }
     body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
+      margin: 0; min-height: 100vh; background: var(--bg); color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      display: grid;
-      place-items: center;
-      padding: 28px;
+      display: grid; place-items: center; padding: 28px;
     }
     main {
-      width: min(760px, 100%);
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 28px;
-      box-shadow: 0 18px 45px rgba(17, 24, 39, 0.08);
+      width: min(760px, 100%); background: #fff;
+      border: 1px solid var(--line); border-radius: 8px;
+      padding: 28px; box-shadow: 0 18px 45px rgba(17,24,39,.08);
     }
     h1 { font-size: 24px; margin: 0 0 8px; }
-    .path {
-      color: var(--muted);
-      margin: 0 0 22px;
-      font-size: 14px;
-      word-break: break-all;
+    .path-row {
+      display: flex; align-items: center; gap: 8px;
+      margin: 0 0 22px; font-size: 14px; flex-wrap: wrap;
     }
-    label {
-      display: block;
-      font-weight: 650;
-      margin-bottom: 8px;
+    .path-label { color: var(--muted); white-space: nowrap; }
+    .path-input {
+      flex: 1; min-width: 200px; border: 1px solid var(--line);
+      border-radius: 6px; padding: 4px 8px; font: inherit; font-size: 13px;
+      color: var(--text); outline: none; background: #fafafa;
     }
+    .path-input:focus { border-color: var(--accent); background: #fff; }
+    label { display: block; font-weight: 650; margin-bottom: 8px; }
     textarea {
-      width: 100%;
-      min-height: 80px;
-      resize: vertical;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 14px;
-      font: inherit;
-      line-height: 1.45;
-      outline: none;
+      width: 100%; min-height: 80px; resize: vertical;
+      border: 1px solid var(--line); border-radius: 8px;
+      padding: 14px; font: inherit; line-height: 1.45; outline: none;
     }
-    textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
-    }
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 14px;
-      flex-wrap: wrap;
-    }
+    textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(15,118,110,.14); }
+    .actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
 
-    /* ── Button group (primary + dropdown trigger) ── */
-    .btn-group {
-      display: inline-flex;
-      border-radius: 8px;
-      overflow: hidden;
-    }
+    /* ── Button group ── */
+    .btn-group { display: inline-flex; border-radius: 8px; overflow: hidden; }
     .btn-group button { border-radius: 0; }
     .btn-group button:first-child { border-radius: 8px 0 0 8px; }
     .btn-group button:last-child {
-      border-radius: 0 8px 8px 0;
-      border-left: 1px solid rgba(255,255,255,.3);
-      padding: 0 10px;
-      min-width: 36px;
+      border-radius: 0 8px 8px 0; border-left: 1px solid rgba(255,255,255,.3);
+      padding: 0 10px; min-width: 36px;
     }
-    .btn-group.primary button:first-child { border-radius: 8px 0 0 8px; }
-
-    /* ── Dropdown ── */
     .dropdown { position: relative; display: inline-flex; }
     .dropdown-menu {
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      min-width: 160px;
-      background: #fff;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.12);
-      z-index: 100;
-      overflow: hidden;
-      margin-top: 4px;
+      display: none; position: absolute; top: 100%; left: 0;
+      min-width: 180px; background: #fff; border: 1px solid var(--line);
+      border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.12);
+      z-index: 100; overflow: hidden; margin-top: 4px;
     }
     .dropdown-menu.open { display: block; }
     .dropdown-menu button {
-      display: block;
-      width: 100%;
-      border: 0;
-      border-radius: 0;
-      text-align: left;
-      padding: 10px 14px;
-      min-height: auto;
-      background: #fff;
-      color: var(--text);
-      font-size: 14px;
+      display: block; width: 100%; border: 0; border-radius: 0;
+      text-align: left; padding: 10px 14px; min-height: auto;
+      background: #fff; color: var(--text); font-size: 14px; font-weight: 500;
     }
-    .dropdown-menu button:hover {
-      background: #f0f0f0;
-      color: var(--accent);
-    }
+    .dropdown-menu button:hover { background: #f0f0f0; color: var(--accent); }
 
     button {
-      appearance: none;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      color: var(--text);
-      min-height: 44px;
-      padding: 0 16px;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .15s;
+      appearance: none; border: 1px solid var(--line); border-radius: 8px;
+      background: #fff; color: var(--text); min-height: 44px; padding: 0 16px;
+      font: inherit; font-weight: 600; cursor: pointer; transition: all .15s;
       white-space: nowrap;
     }
-    button:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
+    button:hover { border-color: var(--accent); color: var(--accent); }
     button:disabled { cursor: wait; opacity: .6; }
-    button.primary {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
+    button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
     button.primary:hover { background: var(--accent-dark); }
+    .arrow { display: inline-block; font-size: 10px; margin-left: 2px; }
 
-    .arrow {
-      display: inline-block;
-      font-size: 10px;
-      margin-left: 2px;
-    }
-
-    #status {
-      margin-top: 10px;
-      min-height: 20px;
-      font-size: 14px;
-      color: var(--muted);
-    }
+    #status { margin-top: 10px; min-height: 20px; font-size: 14px; color: var(--muted); }
     .result {
-      margin-top: 18px;
-      padding: 14px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: #fafafa;
-      display: none;
-      word-break: break-all;
-      line-height: 1.6;
-      white-space: pre-wrap;
-      max-height: 500px;
-      overflow-y: auto;
-      font-size: 14px;
+      margin-top: 18px; padding: 14px; border-radius: 8px;
+      border: 1px solid var(--line); background: #fafafa;
+      display: none; word-break: break-all; line-height: 1.6;
+      white-space: pre-wrap; max-height: 500px; overflow-y: auto; font-size: 14px;
     }
-    .result.ok {
-      display: block;
-      border-color: #abefc6;
-      color: var(--ok);
-      background: #f6fef9;
-    }
-    .result.err {
-      display: block;
-      border-color: #fecdca;
-      color: var(--danger);
-      background: #fffbfa;
-    }
-    .result.transcript {
-      display: block;
-      border-color: #c3dafe;
-      color: var(--text);
-      background: #f0f4ff;
-    }
-    .hint {
-      margin-top: 14px;
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
+    .result.ok { display: block; border-color: #abefc6; color: var(--ok); background: #f6fef9; }
+    .result.err { display: block; border-color: #fecdca; color: var(--danger); background: #fffbfa; }
+    .result.transcript { display: block; border-color: #c3dafe; color: var(--text); background: #f0f4ff; }
+    .hint { margin-top: 14px; font-size: 13px; color: var(--muted); line-height: 1.6; }
   </style>
 </head>
 <body>
   <main>
     <h1>视频下载</h1>
-    <p class="path">支持：抖音 · 小红书 · B站 · YouTube · 快手 &nbsp;|&nbsp; 保存到：~/Desktop/下载</p>
+    <div class="path-row">
+      <span class="path-label">保存到：</span>
+      <input class="path-input" id="save-dir" value="~/Desktop/下载" placeholder="保存路径">
+    </div>
 
     <label for="url">粘贴视频链接或整段分享口令</label>
     <textarea id="url" placeholder="例如：https://v.douyin.com/xxxx/ 或 https://www.bilibili.com/video/BVxxxx"></textarea>
@@ -210,14 +107,14 @@
       <div class="dropdown">
         <div class="btn-group primary">
           <button id="btn-download" onclick="doAction('download')">下载视频</button>
-          <button id="btn-download-dd" onclick="toggleMenu('download-menu')"><span class="arrow">▼</span></button>
+          <button onclick="toggleMenu('download-menu')"><span class="arrow">▼</span></button>
         </div>
         <div class="dropdown-menu" id="download-menu">
-          <button onclick="doAction('download')">下载视频</button>
-          <button onclick="doAction('audio')">下载音频 (mp3)</button>
-          <button onclick="doAction('subtitle')">下载字幕 (纯文本)</button>
-          <button onclick="doAction('srt')">下载 SRT 字幕 (带时间线)</button>
-          <button onclick="doAction('transcript')">下载文案</button>
+          <button data-action="download" data-label="下载视频">下载视频</button>
+          <button data-action="audio" data-label="下载音频">下载音频 (mp3)</button>
+          <button data-action="subtitle" data-label="下载字幕">下载字幕 (纯文本)</button>
+          <button data-action="srt" data-label="下载SRT">下载 SRT 字幕 (带时间线)</button>
+          <button data-action="transcript" data-label="下载文案">下载文案</button>
         </div>
       </div>
 
@@ -225,12 +122,12 @@
       <div class="dropdown">
         <div class="btn-group">
           <button id="btn-extract" onclick="doAction('extract')">提取字幕</button>
-          <button id="btn-extract-dd" onclick="toggleMenu('extract-menu')"><span class="arrow">▼</span></button>
+          <button onclick="toggleMenu('extract-menu')"><span class="arrow">▼</span></button>
         </div>
         <div class="dropdown-menu" id="extract-menu">
-          <button onclick="doAction('extract')">提取字幕 (纯文本)</button>
-          <button onclick="doAction('extract-srt')">提取 SRT 字幕 (带时间线)</button>
-          <button onclick="doAction('extract-transcript')">提取文案</button>
+          <button data-action="extract" data-label="提取字幕">提取字幕 (纯文本)</button>
+          <button data-action="extract-srt" data-label="提取SRT">提取 SRT 字幕 (带时间线)</button>
+          <button data-action="extract-transcript" data-label="提取文案">提取文案</button>
         </div>
       </div>
     </div>
@@ -246,6 +143,7 @@
 
   <script>
     const input = document.getElementById('url');
+    const saveDirInput = document.getElementById('save-dir');
     const statusEl = document.getElementById('status');
     const result = document.getElementById('result');
     const apiBase = location.protocol === 'file:' ? 'http://127.0.0.1:8787' : '';
@@ -254,7 +152,10 @@
       show('err', '请用 http://localhost:8787 打开这个工具。');
     }
 
-    /* ── Dropdown toggle ── */
+    // Restore save dir from localStorage
+    const savedDir = localStorage.getItem('save-dir');
+    if (savedDir) saveDirInput.value = savedDir;
+
     function toggleMenu(id) {
       const menu = document.getElementById(id);
       const wasOpen = menu.classList.contains('open');
@@ -268,13 +169,25 @@
       if (!e.target.closest('.dropdown')) closeAllMenus();
     });
 
-    /* ── Show result ── */
+    // Dropdown item click → update button text + trigger action
+    document.querySelectorAll('.dropdown-menu button[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        const label = btn.dataset.label;
+        // Update the parent button text
+        const group = btn.closest('.dropdown');
+        const mainBtn = group.querySelector('.btn-group button:first-child');
+        if (mainBtn) mainBtn.textContent = label;
+        closeAllMenus();
+        doAction(action);
+      });
+    });
+
     function show(kind, text) {
       result.className = `result ${kind}`;
       result.textContent = text;
     }
 
-    /* ── Action map ── */
     const ACTIONS = {
       'download':            { endpoint: '/api/download',    loading: '正在下载视频...',       type: 'file' },
       'audio':               { endpoint: '/api/audio',       loading: '正在提取音频...',       type: 'file' },
@@ -294,6 +207,9 @@
       const url = input.value.trim();
       if (!url) { show('err', '先粘贴一个视频链接。'); return; }
 
+      // Save path to localStorage
+      localStorage.setItem('save-dir', saveDirInput.value.trim());
+
       const buttons = document.querySelectorAll('button');
       buttons.forEach(b => b.disabled = true);
       statusEl.textContent = cfg.loading;
@@ -304,25 +220,22 @@
         const resp = await fetch(`${apiBase}${cfg.endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url }),
+          body: JSON.stringify({ url, save_dir: saveDirInput.value.trim() }),
         });
         const data = await resp.json();
         if (!resp.ok || !data.ok) throw new Error(data.error || '操作失败');
 
         if (cfg.type === 'file') {
-          // File saved to disk
           show('ok', `完成：${data.filename}\n平台：${data.platform}\n大小：${(data.bytes / 1024 / 1024).toFixed(1)} MB\n保存到：${data.path}`);
         } else if (cfg.type === 'download-text') {
-          // Text content → download as file
           const text = data.text || data.content || '';
           const fname = (data.title || 'subtitle') + cfg.ext;
           downloadTextFile(fname, text);
           show('ok', `已下载：${fname}\n平台：${data.platform || ''}\n字符数：${text.length}`);
         } else {
-          // Show in page
           const text = data.text || data.content || '(空)';
-          const method = data.method || '';
-          const title = data.title ? ` 【${data.title}】` : '';
+          const method = data.method ? `【${data.method}】` : '';
+          const title = data.title ? ` ${data.title}` : '';
           const plat = data.platform ? ` ${data.platform}` : '';
           show('transcript', `${method}${plat}${title}\n${'─'.repeat(40)}\n\n${text}`);
         }
@@ -343,13 +256,10 @@
       URL.revokeObjectURL(a.href);
     }
 
-    // Enter key → download video
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        doAction('download');
-      }
+      if (e.key === 'Enter' && !eShiftKey(e)) { e.preventDefault(); doAction('download'); }
     });
+    function eShiftKey(e) { return e.shiftKey; }
   </script>
 </body>
 </html>

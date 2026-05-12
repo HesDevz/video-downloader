@@ -3,11 +3,13 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 from douyin_downloader.core import (
-    DEFAULT_SAVE_DIR, DownloadError,
+    DEFAULT_SAVE_DIR, DownloadError, load_env,
     download_video, extract_audio, extract_subtitles, extract_srt, extract_transcript,
     SUPPORTED_PLATFORMS,
 )
 
+# Load .env at startup
+load_env()
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLIC = ROOT / "public"
@@ -41,7 +43,11 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
             body = self.rfile.read(length).decode("utf-8")
             payload = json.loads(body)
-            result = func(payload.get("url", ""), DEFAULT_SAVE_DIR)
+
+            # Support custom save_dir from frontend
+            save_dir = payload.get("save_dir") or DEFAULT_SAVE_DIR
+
+            result = func(payload.get("url", ""), save_dir)
             self._send_json(200, result)
         except DownloadError as exc:
             self._send_json(400, {"ok": False, "error": str(exc)})
