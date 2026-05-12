@@ -8,7 +8,7 @@ import urllib.request
 from pathlib import Path
 
 
-DEFAULT_SAVE_DIR = Path("/Users/zhuangjiujiu/Desktop/下载")
+DEFAULT_SAVE_DIR = Path.home() / "Desktop" / "下载"
 USER_AGENT = (
     "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) "
     "AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 aweme"
@@ -27,19 +27,67 @@ def extract_url(text):
 
 
 def fetch(url, *, method="GET", referer=None, timeout=25):
-    headers = {"User-Agent": USER_AGENT}
+    cmd = [
+        "curl", "-sSL", "-D-", "--max-time", str(timeout),
+        "-H", f"User-Agent: {USER_AGENT}",
+    ]
     if referer:
-        headers["Referer"] = referer
-    request = urllib.request.Request(url, headers=headers, method=method)
+        cmd += ["-H", f"Referer: {referer}"]
+    if method == "HEAD":
+        cmd += ["--head"]
+    cmd.append(url)
+
+    import subprocess
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            return response.geturl(), response.headers, response.read()
-    except urllib.error.HTTPError as exc:
-        if method == "HEAD" and exc.headers.get("Location"):
-            return exc.headers["Location"], exc.headers, b""
-        raise DownloadError(f"请求失败：HTTP {exc.code}") from exc
-    except urllib.error.URLError as exc:
-        raise DownloadError(f"网络请求失败：{exc.reason}") from exc
+        proc = subprocess.run(cmd, capture_output=True, timeout=timeout + 5)
+    except subprocess.TimeoutExpired as exc:
+        raise DownloadError(f"网络请求失败：超时") from exc
+
+    if proc.returncode != 0:
+        err = proc.stderr.decode("utf-8", errors="ignore").strip()
+        raise DownloadError(f"网络请求失败：{err or proc.returncode}")
+
+    raw = proc.stdout
+    # split headers / body (CRLF CRLF)
+    sep = raw.find(b"\r\n\r\n")
+    if sep == -1:
+        sep = raw.find(b"\n\n")
+        head_part = raw[:sep] if sep != -1 else raw
+        body = raw[sep + 2:] if sep != -1 else b""
+    else:
+        head_part = raw[:sep]
+        body = raw[sep + 4:]
+
+    head_text = head_part.decode("utf-8", errors="ignore")
+    status_line = head_text.splitlines()[0] if head_text else ""
+
+    # For HEAD requests, check for Location in 3xx
+    loc = None
+    for line in head_text.splitlines():
+        if line.lower().startswith("location:"):
+            loc = line.split(":", 1)[1].strip()
+            break
+
+    # Build a simple header dict
+    class _Headers:
+        def __init__(self, text):
+            self._lines = text.splitlines()[1:]  # skip status line
+        def get(self, key, default=""):
+            prefix = key.lower() + ":"
+            for l in self._lines:
+                if l.lower().startswith(prefix):
+                    return l.split(":", 1)[1].strip()
+            return default
+        def __getitem__(self, key):
+            return self.get(key)
+
+    headers = _Headers(head_text)
+    final_url = loc or url
+
+    if method == "HEAD" and loc:
+        return final_url, headers, b""
+
+    return final_url, headers, body
 
 
 def resolve_url(url):
