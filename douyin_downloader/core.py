@@ -393,49 +393,80 @@ def _fetch_subtitles_raw(source_url, save_dir):
     list_cmd = [ytdlp, "--list-subs", "--no-playlist", source_url]
     rc, list_out, list_err = _run_ytdlp(list_cmd, timeout=60)
 
-    # 优先选中文字幕，其次英文字幕，最后自动
-    sub_lang = "zh"
-    if rc == 0 and "zh" not in list_out:
-        if "en" in list_out:
-            sub_lang = "en"
-        else:
-            # 用第一个可用语言
-            for line in list_out.splitlines():
-                if line and not line.startswith("Available") and not line.startswith("Language"):
-                    parts = line.split()
-                    if parts:
-                        sub_lang = parts[0]
-                        break
+    # 从输出中提取实际可用的语言代码（每行第一个字段）
+    # 排除翻译字幕（如 zh-Hans-en），优先原始字幕
+    available_langs = set()
+    translated_langs = set()
+    if rc == 0:
+        for line in list_out.splitlines():
+            parts = line.split()
+            if parts and not line.startswith("Available") and not line.startswith("Language") and not line.startswith("["):
+                lang = parts[0]
+                if lang and len(lang) <= 10:
+                    if "-en" in lang or "-zh" in lang:
+                        translated_langs.add(lang)
+                    else:
+                        available_langs.add(lang)
+
+    # 优先原始中文字幕，其次原始英文，最后翻译字幕
+    sub_lang = None
+    for pref in ["zh-Hans", "zh", "zh-CN", "en"]:
+        if pref in available_langs:
+            sub_lang = pref
+            break
+    if not sub_lang and available_langs:
+        sub_lang = sorted(available_langs)[0]
+    if not sub_lang and translated_langs:
+        # 翻译字幕作为最后备选
+        sub_lang = sorted(translated_langs)[0]
+    if not sub_lang:
+        sub_lang = "en"
+
+    # 按优先级排列语言列表，逐个尝试
+    lang_candidates = []
+    for pref in ["zh-Hans", "zh", "zh-CN", "en"]:
+        if pref in available_langs:
+            lang_candidates.append(pref)
+    lang_candidates.extend(sorted(available_langs - set(lang_candidates)))
+    if translated_langs:
+        lang_candidates.extend(sorted(translated_langs))
+    if not lang_candidates:
+        lang_candidates = ["en"]
 
     outtmpl = str(target_dir / "%(title).80s_%(id)s")
-
-    # 下载字幕（优先自动字幕）
-    cmd = [
-        ytdlp, "--no-playlist", "--skip-download",
-        "--write-sub", "--write-auto-sub",
-        "--sub-lang", sub_lang, "--sub-format", "srt",
-        "--convert-subs", "srt",
-        "-o", outtmpl,
-        source_url,
-    ]
-    rc, stdout, stderr = _run_ytdlp(cmd, timeout=120)
-    if rc != 0:
-        err_line = stderr.strip().split("\n")[-1] if stderr else "未知错误"
-        raise DownloadError(f"字幕下载失败：{err_line}")
-
-    # 找最近生成的 .srt 文件
-    srt_files = sorted(glob.glob(str(target_dir / "*.srt")), key=os.path.getmtime, reverse=True)
-    now = time.time()
     recent_srt = None
-    for f in srt_files:
-        if now - os.path.getmtime(f) < 120:
-            recent_srt = f
-            break
+    last_err = ""
+
+    for sub_lang in lang_candidates:
+        cmd = [
+            ytdlp, "--no-playlist", "--skip-download",
+            "--write-sub", "--write-auto-sub",
+            "--sub-lang", sub_lang, "--sub-format", "srt",
+            "--convert-subs", "srt",
+            "-o", outtmpl,
+            source_url,
+        ]
+        rc, stdout, stderr = _run_ytdlp(cmd, timeout=120)
+
+        # 找最近生成的 .srt 文件
+        srt_files = sorted(glob.glob(str(target_dir / "*.srt")), key=os.path.getmtime, reverse=True)
+        now = time.time()
+        for f in srt_files:
+            if now - os.path.getmtime(f) < 120:
+                recent_srt = f
+                break
+
+        if recent_srt:
+            break  # 成功找到字幕
+        last_err = stderr.strip().split("\n")[-1] if stderr else "未知错误"
+        # 如果是 429 限流，尝试下一个语言
+        if "429" in last_err or "Too Many Requests" in last_err:
+            continue
 
     if not recent_srt:
         raise DownloadError(
-            "没有找到字幕文件。\n"
-            "可能原因：该视频没有字幕（包括自动生成字幕）。"
+            f"没有找到字幕文件（尝试了 {', '.join(lang_candidates)}）。\n"
+            f"最后错误：{last_err}"
         )
 
     srt_content = Path(recent_srt).read_text(encoding="utf-8", errors="ignore")
@@ -560,25 +591,26 @@ def extract_transcript(text, save_dir=DEFAULT_SAVE_DIR):
         subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         tmp_video.unlink(missing_ok=True)
 
-    # 转成 wav 给 MiMo（如果还不是 wav）
-    wav_path = target_dir / f"_tmp_mimo_{int(time.time())}.wav"
-    cmd = [ffmpeg, "-i", str(audio_src), "-vn", "-acodec", "pcm_s16le",
-           "-ar", "16000", "-ac", "1", "-y", str(wav_path)]
+    # 转成 mp3 给 MiMo（比 wav 小很多）
+    mp3_path = target_dir / f"_tmp_mimo_{int(time.time())}.mp3"
+    cmd = [ffmpeg, "-i", str(audio_src), "-vn",
+           "-acodec", "libmp3lame", "-b:a", "32k",
+           "-ar", "16000", "-ac", "1", "-y", str(mp3_path)]
     subprocess.run(cmd, capture_output=True, text=True, timeout=120)
 
     # 清理临时音频
-    if str(audio_src) != str(wav_path):
+    if str(audio_src) != str(mp3_path):
         Path(audio_src).unlink(missing_ok=True)
 
-    if not wav_path.exists() or wav_path.stat().st_size < 1000:
+    if not mp3_path.exists() or mp3_path.stat().st_size < 100:
         raise DownloadError("音频转换失败")
 
     # Base64 编码
-    audio_data = wav_path.read_bytes()
-    wav_path.unlink(missing_ok=True)
+    audio_data = mp3_path.read_bytes()
+    mp3_path.unlink(missing_ok=True)
     audio_b64 = base64.b64encode(audio_data).decode("ascii")
 
-    if len(audio_b64) > 14_000_000:
+    if len(audio_b64) > 20_000_000:
         raise DownloadError(
             f"音频太大（{len(audio_data) // 1024 // 1024}MB），超出 MiMo API 限制。\n"
             "建议使用较短的视频。"
@@ -600,7 +632,7 @@ def _call_mimo_asr(audio_b64):
         "messages": [{
             "role": "user",
             "content": [
-                {"type": "input_audio", "input_audio": {"data": f"data:audio/wav;base64,{audio_b64}"}},
+                {"type": "input_audio", "input_audio": {"data": f"data:audio/mp3;base64,{audio_b64}"}},
                 {"type": "text", "text": (
                     "请完整提取这段音频中的所有文字内容，保持原始顺序和完整性。"
                     "只输出文字内容本身，不要添加任何说明、总结或格式标记。"
