@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>抖音视频下载</title>
+  <title>视频下载</title>
   <style>
     :root {
       color-scheme: light;
@@ -121,11 +121,11 @@
 </head>
 <body>
   <main>
-    <h1>抖音视频下载</h1>
-    <p class="path">保存到：~/Desktop/下载</p>
+    <h1>视频下载</h1>
+    <p class="path">支持：抖音 · 小红书 · B站 · YouTube · 快手 &nbsp;|&nbsp; 保存到：~/Desktop/下载</p>
 
-    <label for="url">粘贴抖音分享链接或整段口令</label>
-    <textarea id="url" placeholder="例如：https://v.douyin.com/xxxx/ 或整段复制口令"></textarea>
+    <label for="url">粘贴视频链接或整段分享口令</label>
+    <textarea id="url" placeholder="支持抖音、小红书、B站、YouTube、快手的链接&#10;例如：https://v.douyin.com/xxxx/ 或 https://www.bilibili.com/video/BVxxxx"></textarea>
 
     <div class="row">
       <button id="download">下载</button>
@@ -154,7 +154,7 @@
     button.addEventListener('click', async () => {
       const url = input.value.trim();
       if (!url) {
-        show('err', '先粘贴一个抖音链接。');
+        show('err', '先粘贴一个视频链接。');
         return;
       }
 
@@ -173,7 +173,7 @@
         if (!response.ok || !data.ok) {
           throw new Error(data.error || '下载失败');
         }
-        show('ok', `下载完成：${data.path}`);
+        show('ok', `下载完成：${data.filename}\n平台：${data.platform}\n大小：${(data.bytes / 1024 / 1024).toFixed(1)} MB\n保存到：${data.path}`);
         input.value = '';
       } catch (error) {
         show('err', error.message);

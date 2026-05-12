@@ -2,7 +2,7 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
-from douyin_downloader.core import DEFAULT_SAVE_DIR, DownloadError, download_douyin_video
+from douyin_downloader.core import DEFAULT_SAVE_DIR, DownloadError, download_video, SUPPORTED_PLATFORMS
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -28,7 +28,7 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get("Content-Length", "0"))
             body = self.rfile.read(length).decode("utf-8")
             payload = json.loads(body)
-            result = download_douyin_video(payload.get("url", ""), DEFAULT_SAVE_DIR)
+            result = download_video(payload.get("url", ""), DEFAULT_SAVE_DIR)
             self._send_json(200, result)
         except DownloadError as exc:
             self._send_json(400, {"ok": False, "error": str(exc)})
@@ -54,8 +54,9 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     server = ThreadingHTTPServer(("127.0.0.1", 8787), Handler)
-    print("Douyin downloader running at http://localhost:8787")
-    print(f"Saving videos to {DEFAULT_SAVE_DIR}")
+    print("视频下载器 running at http://localhost:8787")
+    print(f"支持平台：{SUPPORTED_PLATFORMS}")
+    print(f"保存到：{DEFAULT_SAVE_DIR}")
     server.serve_forever()
 
 
