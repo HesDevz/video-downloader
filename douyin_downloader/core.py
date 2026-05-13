@@ -27,15 +27,14 @@ _SSL_CTX.verify_mode = ssl.CERT_NONE
 
 # MiMo API (loaded from .env by server)
 _MIMO_API_KEY = os.environ.get("XIAOMI_API_KEY", "")
-_MIMO_API_URL = "https://api.xiaomimimo.com/v1/chat/completions"
+_MIMO_BASE_URL = os.environ.get("XIAOMI_BASE_URL", "https://api.xiaomimimo.com/v1")
+_MIMO_API_URL = _MIMO_BASE_URL.rstrip("/") + "/chat/completions"
 _MIMO_MODEL = "mimo-v2.5"
 
 
 def load_env():
-    """Load XIAOMI_API_KEY from ~/.hermes/.env if not already set."""
-    global _MIMO_API_KEY
-    if _MIMO_API_KEY:
-        return
+    """Load XIAOMI_API_KEY and XIAOMI_BASE_URL from ~/.hermes/.env if not already set."""
+    global _MIMO_API_KEY, _MIMO_BASE_URL, _MIMO_API_URL
     env_path = Path.home() / ".hermes" / ".env"
     if env_path.exists():
         for line in env_path.read_text().splitlines():
@@ -44,10 +43,13 @@ def load_env():
                 continue
             key, _, val = line.partition("=")
             key, val = key.strip(), val.strip().strip('"').strip("'")
-            if key == "XIAOMI_API_KEY" and val:
+            if key == "XIAOMI_API_KEY" and val and not _MIMO_API_KEY:
                 _MIMO_API_KEY = val
                 os.environ["XIAOMI_API_KEY"] = val
-                break
+            elif key == "XIAOMI_BASE_URL" and val:
+                _MIMO_BASE_URL = val
+                os.environ["XIAOMI_BASE_URL"] = val
+    _MIMO_API_URL = _MIMO_BASE_URL.rstrip("/") + "/chat/completions"
 
 
 class DownloadError(Exception):
